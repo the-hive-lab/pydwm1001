@@ -29,17 +29,65 @@ class TagPosition:
 
 
 class ShellCommand(Enum):
+    ENTER = b"\r"
     DOUBLE_ENTER = b"\r\r"
     LEP = b"lep"
+    RESET = b"reset"
 
 
-class Listener:
+class UartDwm1001:
+    # These delay periods were experimentally determined
+    RESET_DELAY_PERIOD = 0.1
+    SHELL_STARTUP_DELAY_PERIOD = 1.0
+    SHELL_COMMAND_DELAY_PERIOD = 0.5
+
     def __init__(self, serial_handle: Serial) -> None:
         self.serial_handle = serial_handle
 
+    def send_shell_command(self, command: ShellCommand) -> None:
+        self.serial_handle.write(command.value)
+        self.serial_handle.write(ShellCommand.ENTER.value)
+        self.serial_handle.flush()
+
+        time.sleep(self.SHELL_COMMAND_DELAY_PERIOD)
+
+    def reset(self) -> None:
+        self.send_shell_command(ShellCommand.RESET)
+
+        time.sleep(self.RESET_DELAY_PERIOD)
+
+    def enter_shell_mode(self) -> None:
         self.serial_handle.write(ShellCommand.DOUBLE_ENTER.value)
-        time.sleep(1)
-        self.serial_handle.write(ShellCommand.LEP.value)
+        self.serial_handle.flush()
+
+        time.sleep(self.SHELL_STARTUP_DELAY_PERIOD)
+
+    def exit_shell_mode(self) -> None:
+        # If you quit shell mode (with `quit` command) without stopping
+        # a running command, the command will automatically continue
+        # when re-entering shell mode. This can be confusing, so we
+        # reset the device instead to ensure previously-running commands
+        # terminate.
+        self.reset()
+
+
+class Listener(UartDwm1001):
+    def __init__(self, serial_handle: Serial) -> None:
+        super().__init__(serial_handle)
+
+        # Device may not have shutdown properly previously
+        self.reset()
+        self.enter_shell_mode()
+
+    def start_position_reporting(self) -> None:
+        self.send_shell_command(ShellCommand.LEP)
+
+        # The first line after invoking the command will have part of
+        # the shell prompt mixed in, which would mess up parsing.
+        self.serial_handle.reset_input_buffer()
+
+    def stop_position_reporting(self) -> None:
+        self.send_shell_command(ShellCommand.ENTER)
 
     def wait_for_position_report(self) -> tuple[TagId, TagPosition]:
         report = self.serial_handle.readline().decode().split(",")
