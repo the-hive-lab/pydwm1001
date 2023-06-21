@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 import math
 import time
+from typing import Tuple
 
 # Third party imports
 from serial import Serial
@@ -89,13 +90,14 @@ class Listener(UartDwm1001):
     def stop_position_reporting(self) -> None:
         self.send_shell_command(ShellCommand.ENTER)
 
-    def wait_for_position_report(self) -> tuple[TagId, TagPosition]:
+    def wait_for_position_report(self) -> Tuple[TagId, TagPosition]:
         report = self.serial_handle.readline().decode().split(",")
 
         if len(report) != 8 or report[0] != "POS":
             raise ValueError("Could not parse position report.")
 
-        position_data = [float(substr) for substr in report[3:7]]
+        position_data = [float(substr) for substr in report[3:6]]
+        position_data.append(int(report[6]))
 
         return TagId(report[2]), TagPosition(*position_data)
 
