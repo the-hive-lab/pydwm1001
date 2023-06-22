@@ -36,6 +36,10 @@ class ShellCommand(Enum):
     RESET = b"reset"
 
 
+class ParsingError(Exception):
+    pass
+
+
 class UartDwm1001:
     # These delay periods were experimentally determined
     RESET_DELAY_PERIOD = 0.1
@@ -93,8 +97,11 @@ class Listener(UartDwm1001):
     def wait_for_position_report(self) -> Tuple[TagId, TagPosition]:
         report = self.serial_handle.readline().decode().split(",")
 
-        if len(report) != 8 or report[0] != "POS":
-            raise ValueError("Could not parse position report.")
+        if len(report) != 8:
+            raise ParsingError("Position report has unexpected length.")
+
+        if report[0] != "POS":
+            raise ParsingError("Position report has incorrect tag.")
 
         position_data = [float(substr) for substr in report[3:6]]
         position_data.append(int(report[6]))

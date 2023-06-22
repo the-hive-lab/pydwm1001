@@ -73,14 +73,14 @@ class TestListener(unittest.TestCase):
         listener = dwm1001.Listener(serial_handle)
         listener.start_position_reporting()
 
-        self.assertRaises(ValueError, listener.wait_for_position_report)
+        self.assertRaises(dwm1001.ParsingError, listener.wait_for_position_report)
 
     def test_wait_for_position_report_wrong_header(self) -> None:
         serial_handle = MockSerial(b"BAD,1,TEST1,1.23,4.56,7.89")
         listener = dwm1001.Listener(serial_handle)
         listener.start_position_reporting()
 
-        self.assertRaises(ValueError, listener.wait_for_position_report)
+        self.assertRaises(dwm1001.ParsingError, listener.wait_for_position_report)
 
 
 if __name__ == "__main__":
