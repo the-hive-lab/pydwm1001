@@ -12,6 +12,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  "pyserial"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/the-hive-lab/pydwm1001"
