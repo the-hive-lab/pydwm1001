@@ -109,21 +109,35 @@ class Listener(UartDwm1001):
         return TagId(report[2]), TagPosition(*position_data)
 
 
-class Tag:
+class Tag(UartDwm1001):
     def __init__(self, serial_handle) -> None:
         self.serial_handle = serial_handle
 
-        self.serial_handle.write(ShellCommand.DOUBLE_ENTER.value)
-        time.sleep(1)
-        self.serial_handle.write(ShellCommand.LEP)
+        # Device may not have shutdown properly previously
+        self.reset()
+        self.enter_shell_mode()
+
+    def start_position_reporting(self) -> None:
+        self.send_shell_command(ShellCommand.LEP)
+
+        # The first line after invoking the command will have part of
+        # the shell prompt mixed in, which would mess up parsing.
+        self.serial_handle.reset_input_buffer()
+
+    def stop_position_reporting(self) -> None:
+        self.send_shell_command(ShellCommand.ENTER)
 
     @property
     def position(self) -> TagPosition:
         report = self.serial_handle.readline().decode().split(",")
 
-        if len(report) != 5 or report[0] != "POS":
-            raise ValueError("Could not parse position report.")
+        if len(report) != 5:
+            raise ParsingError("Position report has unexpected length.")
 
-        position_data = [float(substr) for substr in report[1:]]
+        if report[0] != "POS":
+            raise ParsingError("Position report has incorrect tag.")
+
+        position_data = [float(substr) for substr in report[1:4]]
+        position_data.append(int(report[4]))
 
         return TagPosition(*position_data)
