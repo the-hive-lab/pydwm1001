@@ -29,11 +29,17 @@ class TagPosition:
         )
 
 
+@dataclass
+class SystemInfo:
+    address: int
+
+
 class ShellCommand(Enum):
     ENTER = b"\r"
     DOUBLE_ENTER = b"\r\r"
     LEP = b"lep"
     RESET = b"reset"
+    SI = b"si"  # System info
 
 
 class ParsingError(Exception):
@@ -66,6 +72,7 @@ class UartDwm1001:
         self.serial_handle.flush()
 
         time.sleep(self.SHELL_STARTUP_DELAY_PERIOD)
+        self.serial_handle.reset_input_buffer()
 
     def exit_shell_mode(self) -> None:
         # If you quit shell mode (with `quit` command) without stopping
@@ -126,6 +133,22 @@ class Tag(UartDwm1001):
 
     def stop_position_reporting(self) -> None:
         self.send_shell_command(ShellCommand.ENTER)
+
+    @property
+    def tag_id(self) -> str:
+        self.send_shell_command(ShellCommand.SI)
+
+        report = []
+        for _ in range(9):
+            report.append(self.serial_handle.readline().decode())
+
+        # System info has a lot of lines, but we only care about the address
+        address_line = report[2]
+        address_text_start = address_line.find("addr=")
+        address_string = address_line[address_text_start:-1].strip()
+
+        # We only use the last four characters in the address
+        return address_string[-4:]
 
     @property
     def position(self) -> TagPosition:
