@@ -83,7 +83,7 @@ class UartDwm1001:
         self.reset()
 
 
-class Listener(UartDwm1001):
+class PassiveTag(UartDwm1001):
     def __init__(self, serial_handle: Serial) -> None:
         super().__init__(serial_handle)
 
@@ -116,7 +116,7 @@ class Listener(UartDwm1001):
         return TagId(report[2]), TagPosition(*position_data)
 
 
-class Tag(UartDwm1001):
+class ActiveTag(UartDwm1001):
     def __init__(self, serial_handle) -> None:
         self.serial_handle = serial_handle
 
