@@ -55,6 +55,22 @@ class UartDwm1001:
     def __init__(self, serial_handle: Serial) -> None:
         self.serial_handle = serial_handle
 
+    @property
+    def tag_id(self) -> str:
+        self.send_shell_command(ShellCommand.SI)
+
+        report = []
+        for _ in range(9):
+            report.append(self.serial_handle.readline().decode())
+
+        # System info has a lot of lines, but we only care about the address
+        address_line = report[2]
+        address_text_start = address_line.find("addr=")
+        address_string = address_line[address_text_start:-1].strip()
+
+        # We only use the last four characters in the address
+        return address_string[-4:]
+
     def send_shell_command(self, command: ShellCommand) -> None:
         self.serial_handle.write(command.value)
         self.serial_handle.write(ShellCommand.ENTER.value)
@@ -133,22 +149,6 @@ class ActiveTag(UartDwm1001):
 
     def stop_position_reporting(self) -> None:
         self.send_shell_command(ShellCommand.ENTER)
-
-    @property
-    def tag_id(self) -> str:
-        self.send_shell_command(ShellCommand.SI)
-
-        report = []
-        for _ in range(9):
-            report.append(self.serial_handle.readline().decode())
-
-        # System info has a lot of lines, but we only care about the address
-        address_line = report[2]
-        address_text_start = address_line.find("addr=")
-        address_string = address_line[address_text_start:-1].strip()
-
-        # We only use the last four characters in the address
-        return address_string[-4:]
 
     @property
     def position(self) -> TagPosition:
