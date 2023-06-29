@@ -15,11 +15,11 @@ import dwm1001
 
 def main() -> NoReturn:
     serial_handle = Serial("/dev/ttyACM0", baudrate=115_200)
-    listener = dwm1001.Listener(serial_handle)
-    listener.start_position_reporting()
+    passive_tag = dwm1001.PassiveTag(serial_handle)
+    passive_tag.start_position_reporting()
 
     while True:
-        tag_id, tag_position = listener.wait_for_position_report()
+        tag_id, tag_position = passive_tag.wait_for_position_report()
         print(f"{tag_id}: {tag_position}")
 
 

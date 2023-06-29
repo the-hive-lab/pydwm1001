@@ -48,10 +48,10 @@ class TestTagPosition(unittest.TestCase):
         self.assertTrue(position1.almost_equal(position2))
 
 
-class TestListener(unittest.TestCase):
+class TestPassiveTag(unittest.TestCase):
     def test_construction(self) -> None:
         serial_handle = MockSerial()
-        dwm1001.Listener(serial_handle)
+        dwm1001.PassiveTag(serial_handle)
 
         self.assertEqual(serial_handle.write_history[0], b"reset")
         self.assertEqual(serial_handle.write_history[1], b"\r")
@@ -59,10 +59,10 @@ class TestListener(unittest.TestCase):
 
     def test_wait_for_position_report_good(self) -> None:
         serial_handle = MockSerial(b"POS,1,TEST1,1.23,4.56,7.89,20,86")
-        listener = dwm1001.Listener(serial_handle)
-        listener.start_position_reporting()
+        passive_tag = dwm1001.PassiveTag(serial_handle)
+        passive_tag.start_position_reporting()
 
-        tag_id, tag_position = listener.wait_for_position_report()
+        tag_id, tag_position = passive_tag.wait_for_position_report()
         self.assertEqual(tag_id, "TEST1")
 
         expected_position = dwm1001.TagPosition(1.23, 4.56, 7.89, 20)
@@ -70,17 +70,17 @@ class TestListener(unittest.TestCase):
 
     def test_wait_for_position_report_short(self) -> None:
         serial_handle = MockSerial(b"POS,1,TEST1,1.23,4.56,7.89")
-        listener = dwm1001.Listener(serial_handle)
-        listener.start_position_reporting()
+        passive_tag = dwm1001.PassiveTag(serial_handle)
+        passive_tag.start_position_reporting()
 
-        self.assertRaises(dwm1001.ParsingError, listener.wait_for_position_report)
+        self.assertRaises(dwm1001.ParsingError, passive_tag.wait_for_position_report)
 
     def test_wait_for_position_report_wrong_header(self) -> None:
         serial_handle = MockSerial(b"BAD,1,TEST1,1.23,4.56,7.89")
-        listener = dwm1001.Listener(serial_handle)
-        listener.start_position_reporting()
+        passive_tag = dwm1001.PassiveTag(serial_handle)
+        passive_tag.start_position_reporting()
 
-        self.assertRaises(dwm1001.ParsingError, listener.wait_for_position_report)
+        self.assertRaises(dwm1001.ParsingError, passive_tag.wait_for_position_report)
 
 
 if __name__ == "__main__":
