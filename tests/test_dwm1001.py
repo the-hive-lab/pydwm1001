@@ -45,7 +45,7 @@ class TestTagPosition(unittest.TestCase):
         position1 = dwm1001.TagPosition(1.23, 4.56, 7.89, 42)
         position2 = dwm1001.TagPosition(1.23, 4.56, 7.89, 42)
 
-        self.assertTrue(position1.almost_equal(position2))
+        self.assertTrue(position1.is_almost_equal(position2))
 
 
 class TestPassiveTag(unittest.TestCase):
@@ -66,7 +66,7 @@ class TestPassiveTag(unittest.TestCase):
         self.assertEqual(tag_id, "TEST1")
 
         expected_position = dwm1001.TagPosition(1.23, 4.56, 7.89, 20)
-        self.assertTrue(tag_position.almost_equal(expected_position))
+        self.assertTrue(tag_position.is_almost_equal(expected_position))
 
     def test_wait_for_position_report_short(self) -> None:
         serial_handle = MockSerial(b"POS,1,TEST1,1.23,4.56,7.89")
