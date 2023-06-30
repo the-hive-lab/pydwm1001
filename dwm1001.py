@@ -20,7 +20,7 @@ class TagPosition:
     z_m: float
     quality: int
 
-    def almost_equal(self, other: "TagPosition") -> bool:
+    def is_almost_equal(self, other: "TagPosition") -> bool:
         return (
             math.isclose(self.x_m, other.x_m)
             and math.isclose(self.y_m, other.y_m)
