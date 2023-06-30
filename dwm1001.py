@@ -98,15 +98,6 @@ class UartDwm1001:
         # terminate.
         self.reset()
 
-
-class PassiveTag(UartDwm1001):
-    def __init__(self, serial_handle: Serial) -> None:
-        super().__init__(serial_handle)
-
-        # Device may not have shutdown properly previously
-        self.reset()
-        self.enter_shell_mode()
-
     def start_position_reporting(self) -> None:
         self.send_shell_command(ShellCommand.LEP)
 
@@ -116,6 +107,15 @@ class PassiveTag(UartDwm1001):
 
     def stop_position_reporting(self) -> None:
         self.send_shell_command(ShellCommand.ENTER)
+
+
+class PassiveTag(UartDwm1001):
+    def __init__(self, serial_handle: Serial) -> None:
+        super().__init__(serial_handle)
+
+        # Device may not have shutdown properly previously
+        self.reset()
+        self.enter_shell_mode()
 
     def wait_for_position_report(self) -> Tuple[TagId, TagPosition]:
         report = self.serial_handle.readline().decode().split(",")
@@ -139,16 +139,6 @@ class ActiveTag(UartDwm1001):
         # Device may not have shutdown properly previously
         self.reset()
         self.enter_shell_mode()
-
-    def start_position_reporting(self) -> None:
-        self.send_shell_command(ShellCommand.LEP)
-
-        # The first line after invoking the command will have part of
-        # the shell prompt mixed in, which would mess up parsing.
-        self.serial_handle.reset_input_buffer()
-
-    def stop_position_reporting(self) -> None:
-        self.send_shell_command(ShellCommand.ENTER)
 
     @property
     def position(self) -> TagPosition:
