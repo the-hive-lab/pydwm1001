@@ -83,19 +83,6 @@ class UartDwm1001:
 
         return SystemInfo.from_string(response)
 
-    @property
-    def uwb_address(self) -> TagId:
-        self.send_shell_command(ShellCommand.SI)
-
-        response = self.get_shell_response().splitlines()
-
-        # System info response has several lines, but we only care about the address
-        address_line = response[1]
-        address_text_start = address_line.find("addr=")
-        address_string = address_line[address_text_start:].strip()
-
-        return TagId("0" + address_string.removeprefix("addr="))
-
     def send_shell_command(self, command: ShellCommand) -> None:
         self.serial_handle.write(command.value)
         self.serial_handle.write(ShellCommand.ENTER.value)
