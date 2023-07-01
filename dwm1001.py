@@ -13,6 +13,10 @@ class TagId(str):
     pass
 
 
+class TagName(str):
+    pass
+
+
 @dataclass
 class TagPosition:
     x_m: float
@@ -56,20 +60,24 @@ class UartDwm1001:
         self.serial_handle = serial_handle
 
     @property
-    def tag_id(self) -> str:
+    def tag_name(self) -> TagName:
+        # We only use the last four characters in the address
+        return TagName("DW" + self.tag_id[-4:])
+
+    @property
+    def tag_id(self) -> TagId:
         self.send_shell_command(ShellCommand.SI)
 
-        report = []
+        response = []
         for _ in range(9):
-            report.append(self.serial_handle.readline().decode())
+            response.append(self.serial_handle.readline().decode())
 
-        # System info has a lot of lines, but we only care about the address
-        address_line = report[2]
+        # System info response has several lines, but we only care about the address
+        address_line = response[2]
         address_text_start = address_line.find("addr=")
-        address_string = address_line[address_text_start:-1].strip()
+        address_string = address_line[address_text_start:].strip()
 
-        # We only use the last four characters in the address
-        return address_string[-4:]
+        return TagId("0" + address_string.removeprefix("addr="))
 
     def send_shell_command(self, command: ShellCommand) -> None:
         self.serial_handle.write(command.value)
@@ -117,7 +125,7 @@ class PassiveTag(UartDwm1001):
         self.reset()
         self.enter_shell_mode()
 
-    def wait_for_position_report(self) -> Tuple[TagId, TagPosition]:
+    def wait_for_position_report(self) -> Tuple[TagName, TagPosition]:
         report = self.serial_handle.readline().decode().split(",")
 
         if len(report) != 8:
@@ -129,7 +137,7 @@ class PassiveTag(UartDwm1001):
         position_data = [float(substr) for substr in report[3:6]]
         position_data.append(int(report[6]))
 
-        return TagId(report[2]), TagPosition(*position_data)
+        return TagName("DW" + report[2]), TagPosition(*position_data)
 
 
 class ActiveTag(UartDwm1001):
