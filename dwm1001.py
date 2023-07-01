@@ -35,7 +35,24 @@ class TagPosition:
 
 @dataclass
 class SystemInfo:
-    uwb_address: int
+    uwb_address: str
+    label: str
+
+    @staticmethod
+    def from_string(data: str) -> "SystemInfo":
+        data_lines = data.splitlines()
+
+        uwb_address_line = data_lines[1].strip()
+        address_text_start = uwb_address_line.find("addr=")
+        address_string = "0" + uwb_address_line[address_text_start:].removeprefix(
+            "addr="
+        )
+
+        label_line = data_lines[5].strip()
+        label_text_start = label_line.find("label=")
+        label_string = label_line[label_text_start:].removeprefix("label=")
+
+        return SystemInfo(uwb_address=address_string, label=label_string)
 
 
 class ShellCommand(Enum):
@@ -60,9 +77,11 @@ class UartDwm1001:
         self.serial_handle = serial_handle
 
     @property
-    def tag_name(self) -> TagName:
-        # We only use the last four characters in the address
-        return TagName("DW" + self.uwb_address[-4:])
+    def system_info(self) -> SystemInfo:
+        self.send_shell_command(ShellCommand.SI)
+        response = self.get_shell_response()
+
+        return SystemInfo.from_string(response)
 
     @property
     def uwb_address(self) -> TagId:
