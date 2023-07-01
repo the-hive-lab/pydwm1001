@@ -1,6 +1,6 @@
 [project]
 name = "pydwm1001"
-version = "0.8.0"
+version = "0.9.0"
 authors = [
   { name="Adam Morrissett", email="morrissettal2@vcu.edu" },
 ]
