@@ -68,12 +68,10 @@ class UartDwm1001:
     def tag_id(self) -> TagId:
         self.send_shell_command(ShellCommand.SI)
 
-        response = []
-        for _ in range(9):
-            response.append(self.serial_handle.readline().decode())
+        response = self.get_shell_response().splitlines()
 
         # System info response has several lines, but we only care about the address
-        address_line = response[2]
+        address_line = response[1]
         address_text_start = address_line.find("addr=")
         address_string = address_line[address_text_start:].strip()
 
@@ -85,6 +83,18 @@ class UartDwm1001:
         self.serial_handle.flush()
 
         time.sleep(self.SHELL_COMMAND_DELAY_PERIOD)
+
+    def get_shell_response(self) -> str:
+        raw_data = self.serial_handle.read_until(b"dwm> ")
+
+        # Raw data includes sent command, followed by a new line. The
+        # response starts after the new line.
+        response_begin = raw_data.find(b"\r\n") + 2
+
+        # Raw data always ends with the shell prompt.
+        response_end = raw_data.rfind(b"dwm> ")
+
+        return raw_data[response_begin:response_end].decode().rstrip()
 
     def reset(self) -> None:
         self.send_shell_command(ShellCommand.RESET)
