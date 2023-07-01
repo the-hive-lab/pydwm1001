@@ -35,7 +35,7 @@ class TagPosition:
 
 @dataclass
 class SystemInfo:
-    address: int
+    uwb_address: int
 
 
 class ShellCommand(Enum):
@@ -62,10 +62,10 @@ class UartDwm1001:
     @property
     def tag_name(self) -> TagName:
         # We only use the last four characters in the address
-        return TagName("DW" + self.tag_id[-4:])
+        return TagName("DW" + self.uwb_address[-4:])
 
     @property
-    def tag_id(self) -> TagId:
+    def uwb_address(self) -> TagId:
         self.send_shell_command(ShellCommand.SI)
 
         response = self.get_shell_response().splitlines()
