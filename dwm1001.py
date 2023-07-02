@@ -44,13 +44,11 @@ class SystemInfo:
 
         uwb_address_line = data_lines[1].strip()
         address_text_start = uwb_address_line.find("addr=")
-        address_string = "0" + uwb_address_line[address_text_start:].removeprefix(
-            "addr="
-        )
+        address_string = "0" + uwb_address_line[address_text_start + len("addr=") :]
 
         label_line = data_lines[5].strip()
         label_text_start = label_line.find("label=")
-        label_string = label_line[label_text_start:].removeprefix("label=")
+        label_string = label_line[label_text_start + len("label=") :]
 
         return SystemInfo(uwb_address=address_string, label=label_string)
 
